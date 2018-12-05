@@ -8,17 +8,6 @@
 #define BASE_A 2
 #define BASE_C 3
 
-void err ( const char * msg, int ret )
-{
-	fprintf( stderr, msg );
-	exit( ret );
-}
-
-void warn ( const char * msg )
-{
-	fprintf( stderr, msg );
-}
-
 
 struct liteq_line
 {
@@ -61,13 +50,15 @@ inline char base2Char( unsigned char base )
 	}
 }
 
-void open_file ()
+inline char score2Char( unsigned char score, unsigned char ascii_offset )
 {
-	FILE * fp = fopen( "here's some text", "r" );
-	if ( fp == NULL )
+	return score + ascii_offset;
 }
 
-
+inline uint8_t packRead( unsigned char base, unsigned char score )
+{
+	return ( base << 6 ) & ( score & 0x3F );
+}
 
 
 
