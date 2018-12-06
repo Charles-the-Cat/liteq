@@ -8,6 +8,8 @@
 #define BASE_A 2
 #define BASE_C 3
 
+#define SANGER_ASCII_OFFSET 33
+#define SOLEXA_ASCII_OFFSET 64
 
 struct liteq_line
 {
