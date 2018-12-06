@@ -1,7 +1,6 @@
 #pragma once
 
-#include <stdio.h>
-#include <inttypes.h>
+#include "util.h"
 
 #define BASE_G 0
 #define BASE_T 1
