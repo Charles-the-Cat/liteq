@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <inttypes.h>
 
 void err ( const char * msg, int ret )
@@ -29,6 +30,7 @@ char * fromFile ( char * filename )
 	if ( buf == NULL ) err ( "Failed to allocate memory for file buffer\n", -1 );
 
 	fread( buf, fsize, 1, fp ); // read file into buffer
+	buf[ fsize - 1 ] = '\0'; // set final element to null terminator
 
 	fclose( fp );
 

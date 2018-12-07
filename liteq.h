@@ -51,9 +51,31 @@ inline char base2Char( unsigned char base )
 	}
 }
 
+inline unsigned char char2Base( char ch )
+{
+	switch ( ch )
+	{
+		case 'G':
+			return BASE_G;
+		case 'T':
+			return BASE_T;
+		case 'A':
+			return BASE_A;
+		case 'C':
+			return BASE_C;
+		default:
+			return 0;
+	}
+}
+
 inline char score2Char( unsigned char score, unsigned char ascii_offset )
 {
 	return score + ascii_offset;
+}
+
+inline unsigned char char2Score( char ch, unsigned char ascii_offset )
+{
+	return ch - ascii_offset;
 }
 
 inline uint8_t packRead( unsigned char base, unsigned char score )
