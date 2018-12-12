@@ -10,19 +10,26 @@
 #define SANGER_ASCII_OFFSET 33
 #define SOLEXA_ASCII_OFFSET 64
 
+#define LITEQ_MAGIC 0x4C51
+
 struct liteq_line
 {
 	uint16_t readcount;
 	uint8_t * reads;
 };
 
-struct liteq_header
+struct liteq_file
 {
-	uint16_t magic; // "LQ"
+	uint16_t magic; // "LQ", use LITEQ_MAGIC
 	uint8_t flags;
 	uint16_t linecount;
 	struct liteq_line * lines;
 };
+
+struct liteq_line * liteqLineAllocUniform( readcount_per_line )
+{
+	return malloc( sizeof(uint8_t) * readcount_per_line );
+}
 
 inline unsigned char getBase( uint8_t read )
 {

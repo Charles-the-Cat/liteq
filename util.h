@@ -3,18 +3,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
+#include <unistd.h>
 
-void err ( const char * msg, int ret )
-{
-	fputs( msg, stderr );
-	exit( ret );
-}
+#define err( r, ... ) \
+do { \
+	fprintf( stderr, "Error on line %d of file \"%s\":\n", __LINE__, __FILE__ ); \
+	fprintf( stderr, __VA_ARGS__ ); \
+	exit( r ); \
+} while ( 0 )
 
-void warn ( const char * msg )
-{
-	fputs( msg, stderr );
-}
-
+#define warn( ... ) \
+do { \
+	fprintf( stderr, "Warning on line %d of file \"%s\":\n", __LINE__, __FILE__ ); \
+	fprintf( stderr, __VA_ARGS__ ); \
+} while ( 0 )
 
 char * fromFile ( char * filename )
 {
@@ -35,6 +37,16 @@ char * fromFile ( char * filename )
 	fclose( fp );
 
 	return buf;
+}
+
+void toFile ( char * data, char * filename )
+{
+	FILE * fp = fopen( filename, "w" );
+	if ( fp == NULL ) err ( "File could not be opened for writing\n", -1 );
+
+	fprintf( filename, "%s", data );
+
+	fclose( fp );
 }
 
 
