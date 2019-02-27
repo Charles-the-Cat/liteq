@@ -1,6 +1,7 @@
+#include "liteq.h"
 #include "util.h"
 
-#define NEWLINE_STRING "\n"
+#define NEWLINE_STRING "\n\r"
 
 /* an intermediate form for a single fastq file entry. */
 struct interm_entry
@@ -11,18 +12,28 @@ struct interm_entry
 	char * scoresline;
 };
 
+int linesIn( char * str )
+{
+	int lines = 0;
+	while ( *(str++) != '\0' )
+	{
+		if ( *str == '\n' ) lines++;
+	}
+	return lines;
+}
+
 // TODO: sanity check for huge fastq files that would exceed memory capacity
 int main ( int argc, char * * argv )
 {
-//	char * infilename = argv[1];
+	char * infilename = argv[1];
 //	char * outfilename;
 
 	struct liteq_file out = 
 	{
-		.magic = LITEQ_MAGIC;
-		.flags = 0x00;
-		.linecount = 0;
-		.lines = NULL;
+		.magic = LITEQ_MAGIC,
+		.flags = 0x00,
+		.linecount = 0,
+		.lines = NULL
 	};
 
 	char * file = fromFile( infilename );
@@ -35,12 +46,23 @@ int main ( int argc, char * * argv )
 
 	for ( int i = 0; i < entries; i++ )
 	{
-		interms[i].seqidline  = strtok( file, NEWLINE_STRING );
-		interms[i].readsline  = strtok( file, NEWLINE_STRING );
-		interms[i].plusline   = strtok( file, NEWLINE_STRING );
-		interms[i].scoresline = strtok( file, NEWLINE_STRING );
+		interms[i].seqidline  = strtok( i == 0 ? file : NULL, NEWLINE_STRING );
+		interms[i].readsline  = strtok( NULL, NEWLINE_STRING );
+		interms[i].plusline   = strtok( NULL, NEWLINE_STRING );
+		interms[i].scoresline = strtok( NULL, NEWLINE_STRING );
 	}
 
+	for ( int i = 0; i < entries; i++ )
+	{
+		printf
+		( 
+			"DEBUG:\n %s\n %s\n %s\n %s\n", 
+			interms[i].seqidline, 
+			interms[i].readsline,
+			interms[i].plusline,
+			interms[i].scoresline
+		);
+	}
 	free( file );
 
 	struct liteq_line * outlines = malloc( entries * sizeof(struct liteq_line) );	
@@ -48,6 +70,7 @@ int main ( int argc, char * * argv )
 	for ( int i = 0; i < entries; i++ )
 	{
 		outlines[i].readcount = strlen( interms[i].readsline );
+		
 	}
 
 	free( interms );
@@ -55,13 +78,5 @@ int main ( int argc, char * * argv )
 	return 0;
 }
 
-int linesIn( char * str )
-{
-	int lines = 0;
-	while ( *(str++) != '\0' )
-	{
-		if ( *str == '\n' ) lines++;
-	}
-	return lines;
-}
+
 
