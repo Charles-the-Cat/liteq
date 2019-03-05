@@ -3,6 +3,8 @@
 
 #define NEWLINE_STRING "\n\r"
 
+#define HUGE_FILE
+
 /* an intermediate form for a single fastq file entry. */
 struct interm_entry
 {
@@ -12,26 +14,30 @@ struct interm_entry
 	char * scoresline;
 };
 
-int linesIn( char * str )
-{
-	int lines = 0;
-	while ( *(str++) != '\0' )
-	{
-		if ( *str == '\n' ) lines++;
-	}
-	return lines;
-}
 
-void liteqDisplay( struct liteq_file disp )
+void liteqDebugDisplay( struct liteq_file disp )
 {
-	printf( "Magic Number: %x\n", 
+	printf( "DEBUG DISPLAY of struct liteq_file\n" );
+	printf( "Magic Number: 0x%X\n", disp.magic );
+	printf( "Flags: 0x%X\n", disp.flags );
+	printf( "Line Count: %d\n", disp.linecount );
+	printf( "LINES ARE AS FOLLOWS:\n" );
+	for ( int i = 0; i < disp.linecount; i++ )
+	{
+		printf( "\tLine of length %d:", disp.lines[i].readcount );
+		for ( int j = 0; j < disp.lines[i].readcount; j++ )
+		{
+			printf( " %0X", disp.lines[i].reads[j] );
+		}
+		printf( "\n" );
+	}
 }
 
 // TODO: sanity check for huge fastq files that would exceed memory capacity
 int main ( int argc, char * * argv )
 {
 	char * infilename = argv[1];
-//	char * outfilename;
+	char * outfilename;
 
 	struct liteq_file out = 
 	{
@@ -52,9 +58,9 @@ int main ( int argc, char * * argv )
 	for ( int i = 0; i < entries; i++ )
 	{
 		interms[i].seqidline  = strtok( i == 0 ? file : NULL, NEWLINE_STRING );
-		interms[i].readsline  = strtok( NULL, NEWLINE_STRING );
-		interms[i].plusline   = strtok( NULL, NEWLINE_STRING );
-		interms[i].scoresline = strtok( NULL, NEWLINE_STRING );
+		interms[i].readsline  = strtok( 		NULL, NEWLINE_STRING );
+		interms[i].plusline   = strtok( 		NULL, NEWLINE_STRING );
+		interms[i].scoresline = strtok( 		NULL, NEWLINE_STRING );
 	}
 
 	for ( int i = 0; i < entries; i++ )
@@ -71,35 +77,52 @@ int main ( int argc, char * * argv )
 	
 	free( file );
 
-	struct liteq_line * outlines = malloc( entries * sizeof(struct liteq_line) );	
-	out.lines = outlines;
+	out.lines = malloc( entries * sizeof(struct liteq_line) );
 
 	for ( int i = 0; i < entries; i++ )
 	{
-		outlines[i].readcount = strlen( interms[i].readsline );
+		out.lines[i].readcount = (uint16_t)strlen( interms[i].readsline );
 
 		/* TODO: make a single call to malloc instead of iterating */
-		outlines[i].reads = malloc( outlines[i].readcount * sizeof(uint8_t) );
+		out.lines[i].reads = malloc( out.lines[i].readcount * sizeof(uint8_t) );
 
-		for ( int j = 0; j < outlines[i].readcount; j++ )
+		for ( int j = 0; j < out.lines[i].readcount; j++ )
 		{
-			outlines[i].reads[j] = packread
+			out.lines[i].reads[j] = packRead
 			(
 				char2Base(  interms[i].readsline[j]  ),
 				char2Score( interms[i].scoresline[j], SANGER_ASCII_OFFSET )
 			);
 		}
-
 	}
 
-	for ( int i = 0; i < entries; i++ )
+	liteqDebugDisplay( out );
+
+#if 1-1
+	/* file output stuff here */
+
+	FILE * outfp = fopen( outfile, "wb" );
+	if ( outfp == NULL ) err ( -1, "File \"%s\" could not be opened for writing\n", filename );
+
+	/* write header */
+	fwrite( out.magic, sizeof(uint16_t), 1, outfp );
+	fwrite( out.flags, sizeof(uint8_t) , 1, outfp );
+	fwrite( out.flags, sizeof( 
+
+	/* write entries */
+	for ( int i = 0; i < out.linecount; i++ )
 	{
+
 	}
+
+	fclose( outfp );
+
+#endif	
 	
-	
-	for ( int i = 0; i < entries; i++ ) free( outlines[i].reads );
+	for ( int i = 0; i < entries; i++ ) free( out.lines[i].reads );
+	free( out.lines );
+
 	free( interms );
-	free( outlines );
 	return 0;
 }
 

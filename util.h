@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <inttypes.h>
 #include <unistd.h>
 
@@ -21,15 +22,15 @@ do { \
 char * fromFile ( char * filename )
 {
 	FILE * fp = fopen( filename, "r" );
-	if ( fp == NULL ) err ( "File could not be opened\n", -1 );
+	if ( fp == NULL ) err ( -1, "File \"%s\" could not be opened\n", filename );
 
 	fseek( fp, 0L, SEEK_END ); // go to end of file
 	long int fsize = ftell( fp ) + 1; // get filesize in bytes, plus one extra for safety
-	if ( fsize < 0 ) err ( "Couldn't obtain size of file\n", -1 );
+	if ( fsize < 0 ) err ( -1, "Couldn't obtain size of file \"%s\"\n", filename );
 	rewind( fp );
 
 	char * buf = malloc( sizeof( char ) * fsize ); // allocate buffer to fsize
-	if ( buf == NULL ) err ( "Failed to allocate memory for file buffer\n", -1 );
+	if ( buf == NULL ) err ( -1, "Failed to allocate memory for file buffer\"%s\"\n", filename );
 
 	fread( buf, fsize, 1, fp ); // read file into buffer
 	buf[ fsize - 1 ] = '\0'; // set final element to null terminator
@@ -42,13 +43,32 @@ char * fromFile ( char * filename )
 void toFile ( char * data, char * filename )
 {
 	FILE * fp = fopen( filename, "w" );
-	if ( fp == NULL ) err ( "File could not be opened for writing\n", -1 );
+	if ( fp == NULL ) err ( -1, "File \"%s\" could not be opened for writing\n", filename );
 
-	fprintf( filename, "%s", data );
+	fprintf( fp, "%s", data );
 
 	fclose( fp );
 }
 
+void toBinFile ( char * data, char * filename )
+{
+	FILE * fp = fopen( filename, "wb" );
+	if ( fp == NULL ) err ( -1, "File \"%s\" could not be opened for writing\n", filename );
+
+	/* TODO */
+
+	fclose( fp );
+}
+
+int linesIn( char * str )
+{
+	int lines = 0;
+	while ( *(str++) != '\0' )
+	{
+		if ( *str == '\n' ) lines++;
+	}
+	return lines;
+}
 
 
 
