@@ -26,7 +26,7 @@ struct liteq_file
 	struct liteq_line * lines;
 };
 
-struct liteq_line * liteqLineAllocUniform( readcount_per_line )
+struct liteq_line * liteqLineAllocUniform( int readcount_per_line )
 {
 	return malloc( sizeof(uint8_t) * readcount_per_line );
 }
@@ -50,7 +50,7 @@ inline char base2Char( unsigned char base )
 		case BASE_T:
 			return 'T';
 		case BASE_A:
-			return 'C';
+			return 'A';
 		case BASE_C:
 			return 'C';
 		default:
@@ -87,7 +87,7 @@ inline unsigned char char2Score( char ch, unsigned char ascii_offset )
 
 inline uint8_t packRead( unsigned char base, unsigned char score )
 {
-	return ( base << 6 ) & ( score & 0x3F );
+	return ( base << 6 ) | ( score & 0x3F );
 }
 
 
