@@ -34,7 +34,7 @@ char * fromFile ( char * filename )
 
 	size_t freadret = // exists to check if fread worked
 	fread( buf, fsize, 1, fp ); // read file into buffer
-	if ( freadret != fsize ) warn ( "Attempted to read %d bytes, but actually read %d\n", fsize, freadret );
+	if ( freadret != fsize ) warn ( "Attempted to read %lu bytes, but actually read %lu\n", fsize, freadret );
 	buf[ fsize - 1 ] = '\0'; // set final element to null terminator
 
 	fclose( fp );
