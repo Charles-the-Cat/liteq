@@ -99,33 +99,31 @@ int main ( int argc, char * * argv )
 	liteqDebugDisplay( out );
 
 	free( interms );
-#if 1-1
+	
 	/* file output stuff here */
+	FILE * outfp = fopen( outfilename, "wb" );
+	if ( outfp == NULL ) err ( -1, "File \"%s\" could not be opened for writing\n", outfilename );
 
-	FILE * outfp = fopen( outfile, "wb" );
-	if ( outfp == NULL ) err ( -1, "File \"%s\" could not be opened for writing\n", filename );
-
+#if 0+1
 	/* write header */
-	fwrite( out.magic, 	sizeof(uint16_t), 1, outfp );
-	fwrite( out.flags, 	sizeof(uint8_t) , 1, outfp );
-	fwrite( out.linecount, 	sizeof(uint16_t), 1, outfp ); 
+	fwrite( &out.magic, 	sizeof(uint16_t), 1, outfp );
+	fwrite( &out.flags, 	sizeof(uint8_t) , 1, outfp );
+	fwrite( &out.linecount, sizeof(uint16_t), 1, outfp ); 
 
 	/* write entries */
 	for ( int i = 0; i < out.linecount; i++ )
 	{
-		fwrite( out.lines[i].readcount, sizeof(uint16_t), 1, outfp );
+		fwrite( &out.lines[i].readcount, sizeof(uint16_t), 1, outfp );
 		// naive, O(n^2)? approach 
 		for ( int j = 0; j < out.lines[i].readcount; j++ )
 		{
-			fwrite( out.lines[i].reads[j], sizeof(uint8_t), 1, outfp );
+			fwrite( &out.lines[i].reads[j], sizeof(uint8_t), 1, outfp );
 		}
 
 		/* fwrite( out.lines[i].reads, */
 	}
-
+#endif
 	fclose( outfp );
-
-#endif	
 	
 	for ( int i = 0; i < entries; i++ ) free( out.lines[i].reads );
 	free( out.lines );
