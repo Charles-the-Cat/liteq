@@ -25,14 +25,16 @@ char * fromFile ( char * filename )
 	if ( fp == NULL ) err ( -1, "File \"%s\" could not be opened\n", filename );
 
 	fseek( fp, 0L, SEEK_END ); // go to end of file
-	long int fsize = ftell( fp ) + 1; // get filesize in bytes, plus one extra for safety
+	size_t fsize = ftell( fp ) + 1; // get filesize in bytes, plus one extra for safety
 	if ( fsize < 0 ) err ( -1, "Couldn't obtain size of file \"%s\"\n", filename );
 	rewind( fp );
 
 	char * buf = malloc( sizeof( char ) * fsize ); // allocate buffer to fsize
 	if ( buf == NULL ) err ( -1, "Failed to allocate memory for file buffer\"%s\"\n", filename );
 
+	size_t freadret = // exists to check if fread worked
 	fread( buf, fsize, 1, fp ); // read file into buffer
+	if ( freadret != fsize ) warn ( "Attempted to read %d bytes, but actually read %d\n", fsize, freadret );
 	buf[ fsize - 1 ] = '\0'; // set final element to null terminator
 
 	fclose( fp );
