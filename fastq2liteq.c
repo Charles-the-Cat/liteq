@@ -37,7 +37,7 @@ void liteqDebugDisplay( struct liteq_file disp )
 int main ( int argc, char * * argv )
 {
 	char * infilename = argv[1];
-	char * outfilename;
+	char * outfilename = argv[2];
 
 	struct liteq_file out = 
 	{
@@ -98,6 +98,7 @@ int main ( int argc, char * * argv )
 
 	liteqDebugDisplay( out );
 
+	free( interms );
 #if 1-1
 	/* file output stuff here */
 
@@ -105,14 +106,21 @@ int main ( int argc, char * * argv )
 	if ( outfp == NULL ) err ( -1, "File \"%s\" could not be opened for writing\n", filename );
 
 	/* write header */
-	fwrite( out.magic, sizeof(uint16_t), 1, outfp );
-	fwrite( out.flags, sizeof(uint8_t) , 1, outfp );
-	fwrite( out.flags, sizeof( 
+	fwrite( out.magic, 	sizeof(uint16_t), 1, outfp );
+	fwrite( out.flags, 	sizeof(uint8_t) , 1, outfp );
+	fwrite( out.linecount, 	sizeof(uint16_t), 1, outfp ); 
 
 	/* write entries */
 	for ( int i = 0; i < out.linecount; i++ )
 	{
+		fwrite( out.lines[i].readcount, sizeof(uint16_t), 1, outfp );
+		// naive, O(n^2)? approach 
+		for ( int j = 0; j < out.lines[i].readcount; j++ )
+		{
+			fwrite( out.lines[i].reads[j], sizeof(uint8_t), 1, outfp );
+		}
 
+		/* fwrite( out.lines[i].reads, */
 	}
 
 	fclose( outfp );
@@ -121,8 +129,6 @@ int main ( int argc, char * * argv )
 	
 	for ( int i = 0; i < entries; i++ ) free( out.lines[i].reads );
 	free( out.lines );
-
-	free( interms );
 	return 0;
 }
 
