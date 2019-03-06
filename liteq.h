@@ -31,17 +31,17 @@ struct liteq_line * liteqLineAllocUniform( int readcount_per_line )
 	return malloc( sizeof(uint8_t) * readcount_per_line );
 }
 
-inline unsigned char getBase( uint8_t read )
+/*inline*/ unsigned char getBase( uint8_t read )
 {
 	return read >> 6;
 }
 
-inline unsigned char getScore( uint8_t read )
+/*inline*/ unsigned char getScore( uint8_t read )
 {
 	return read & 0x3F;
 }
 
-inline char base2Char( unsigned char base )
+/*inline*/ char base2Char( unsigned char base )
 {
 	switch ( base )
 	{
@@ -58,7 +58,7 @@ inline char base2Char( unsigned char base )
 	}
 }
 
-inline unsigned char char2Base( char ch )
+/*inline*/ unsigned char char2Base( char ch )
 {
 	switch ( ch )
 	{
@@ -75,17 +75,17 @@ inline unsigned char char2Base( char ch )
 	}
 }
 
-inline char score2Char( unsigned char score, unsigned char ascii_offset )
+/*inline*/ char score2Char( unsigned char score, unsigned char ascii_offset )
 {
 	return score + ascii_offset;
 }
 
-inline unsigned char char2Score( char ch, unsigned char ascii_offset )
+/*inline*/ unsigned char char2Score( char ch, unsigned char ascii_offset )
 {
 	return ch - ascii_offset;
 }
 
-inline uint8_t packRead( unsigned char base, unsigned char score )
+/*inline*/ uint8_t packRead( unsigned char base, unsigned char score )
 {
 	return ( base << 6 ) | ( score & 0x3F );
 }
