@@ -22,7 +22,7 @@ struct liteq_file
 {
 	uint16_t magic; // "LQ", use LITEQ_MAGIC
 	uint8_t flags;
-	uint16_t linecount;
+	uint32_t linecount;
 	struct liteq_line * lines;
 };
 
