@@ -1,5 +1,7 @@
 #pragma once
 
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,9 +34,7 @@ char * fromFile ( char * filename )
 	char * buf = malloc( sizeof( char ) * fsize ); // allocate buffer to fsize
 	if ( buf == NULL ) err ( -1, "Failed to allocate memory for file buffer\"%s\"\n", filename );
 
-	size_t freadret = // exists to check if fread worked
 	fread( buf, fsize, 1, fp ); // read file into buffer
-	if ( freadret != fsize ) warn ( "Attempted to read %lu bytes, but actually read %lu\n", fsize, freadret );
 	buf[ fsize - 1 ] = '\0'; // set final element to null terminator
 
 	fclose( fp );
@@ -60,6 +60,17 @@ void toBinFile ( char * data, char * filename )
 	/* TODO */
 
 	fclose( fp );
+}
+
+int linesInFile( FILE * fp )
+{
+	int n = 0;
+	int c;
+	while ( ( c = fgetc( fp ) ) != EOF )
+	{
+		if ( c == '\n' ) n++;
+	}
+	return n;
 }
 
 int linesIn( char * str )
