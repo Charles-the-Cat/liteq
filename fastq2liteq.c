@@ -1,7 +1,7 @@
 #include "liteq.h"
 #include "util.h"
 
-#define NEWLINE_STRING "\n\r"
+#define DEBUG 0
 
 #define HUGE_FILE
 
@@ -33,6 +33,14 @@ void liteqDebugDisplay( struct liteq_file disp )
 	}
 }
 
+size_t mystrlen( char * s )
+{
+	int n = 0;
+	for ( ; s[n] != '\0'; n++ ) ;
+	return n;
+}
+
+/* FIXME: I think \n s are included in reads, strip them! */
 // TODO: sanity check for huge fastq files that would exceed memory capacity
 int main ( int argc, char * * argv )
 {
@@ -47,23 +55,39 @@ int main ( int argc, char * * argv )
 		.lines = NULL
 	};
 
-	char * file = fromFile( infilename );
+	FILE * infp = fopen( infilename, "r" );
+	if ( infp == NULL ) err ( -1, "File \"%s\" could not be opened\n", infilename );
 	
-	int entries = linesIn( file ) / 4; // truncate up to 3 trailing blank lines
+	out.linecount = linesInFile( infp ) / 4; // truncate up to 3 trailing blank lines
 
-	out.linecount = entries; // 
+	struct interm_entry * interms = malloc( out.linecount * sizeof(struct interm_entry) );
 
-	struct interm_entry * interms = malloc( entries * sizeof(struct interm_entry) );
-
-	for ( int i = 0; i < entries; i++ )
+	/* guarantee getline's very first args are NULL and 0 so it allocates correctly */ 
+	size_t getline_len = 0;	// FIXME: we may need to make this a pointer to many zero values
+	for ( uint32_t i = 0; i < out.linecount; i++ ) // TODO: replace with memsetting in zeros?
 	{
-		interms[i].seqidline  = strtok( i == 0 ? file : NULL, NEWLINE_STRING );
-		interms[i].readsline  = strtok( 		NULL, NEWLINE_STRING );
-		interms[i].plusline   = strtok( 		NULL, NEWLINE_STRING );
-		interms[i].scoresline = strtok( 		NULL, NEWLINE_STRING );
+		interms[i].seqidline  = NULL; 
+		interms[i].readsline  = NULL; 
+		interms[i].plusline   = NULL;
+		interms[i].scoresline = NULL; 
+	} 
+	for ( uint32_t i = 0; i < out.linecount; i++ )
+	{
+		getline( &interms[i].seqidline,  &getline_len, infp ); 
+		getline( &interms[i].readsline,  &getline_len, infp ); 
+		getline( &interms[i].plusline,   &getline_len, infp );
+		getline( &interms[i].scoresline, &getline_len, infp ); 
 	}
-
-	for ( int i = 0; i < entries; i++ )
+	/* strip the final '\n' character that getline() preserves */
+	for ( uint32_t i = 0; i < out.linecount; i++ )
+	{
+		interms[i].seqidline[  strlen( interms[i].seqidline )  - 1 ] = '\0'; 
+		interms[i].readsline[  strlen( interms[i].readsline )  - 1 ] = '\0'; 
+		interms[i].plusline[   strlen( interms[i].plusline )   - 1 ] = '\0';
+		interms[i].scoresline[ strlen( interms[i].scoresline ) - 1 ] = '\0'; 
+	} 
+#if DEBUG
+	for ( uint32_t i = 0; i < out.linecount; i++ )
 	{
 		printf
 		( 
@@ -74,15 +98,13 @@ int main ( int argc, char * * argv )
 			interms[i].scoresline
 		);
 	}
-	
-	free( file );
+#endif	
+	out.lines = malloc( out.linecount * sizeof(struct liteq_line) );
 
-	out.lines = malloc( entries * sizeof(struct liteq_line) );
-
-	for ( int i = 0; i < entries; i++ )
+	for ( uint32_t i = 0; i < out.linecount; i++ )
 	{
-		out.lines[i].readcount = (uint16_t)strlen( interms[i].readsline );
-
+		out.lines[i].readcount = (uint32_t)mystrlen( interms[i].readsline ); 		
+		
 		/* TODO: make a single call to malloc instead of iterating */
 		out.lines[i].reads = malloc( out.lines[i].readcount * sizeof(uint8_t) );
 
@@ -96,25 +118,22 @@ int main ( int argc, char * * argv )
 		}
 	}
 
-	liteqDebugDisplay( out );
-
-	free( interms );
+	free( interms ); // TODO: must iterate?
 	
 	/* file output stuff here */
 	FILE * outfp = fopen( outfilename, "wb" );
 	if ( outfp == NULL ) err ( -1, "File \"%s\" could not be opened for writing\n", outfilename );
 
-#if 0+1
 	/* write header */
 	fwrite( &out.magic, 	sizeof(uint16_t), 1, outfp );
 	fwrite( &out.flags, 	sizeof(uint8_t) , 1, outfp );
-	fwrite( &out.linecount, sizeof(uint16_t), 1, outfp ); 
+	fwrite( &out.linecount, sizeof(uint32_t), 1, outfp ); 
 
 	/* write entries */
-	for ( int i = 0; i < out.linecount; i++ )
+	for ( uint32_t i = 0; i < out.linecount; i++ )
 	{
 		fwrite( &out.lines[i].readcount, sizeof(uint16_t), 1, outfp );
-		// naive, O(n^2)? approach 
+		// TODO: naive, O(n^2)? approach 
 		for ( int j = 0; j < out.lines[i].readcount; j++ )
 		{
 			fwrite( &out.lines[i].reads[j], sizeof(uint8_t), 1, outfp );
@@ -122,10 +141,11 @@ int main ( int argc, char * * argv )
 
 		/* fwrite( out.lines[i].reads, */
 	}
-#endif
+
+	fclose( infp  );	
 	fclose( outfp );
 	
-	for ( int i = 0; i < entries; i++ ) free( out.lines[i].reads );
+	for ( uint32_t i = 0; i < out.linecount; i++ ) free( out.lines[i].reads );
 	free( out.lines );
 	return 0;
 }
