@@ -52,24 +52,14 @@ void toFile ( char * data, char * filename )
 	fclose( fp );
 }
 
-void toBinFile ( char * data, char * filename )
-{
-	FILE * fp = fopen( filename, "wb" );
-	if ( fp == NULL ) err ( -1, "File \"%s\" could not be opened for writing\n", filename );
-
-	/* TODO */
-
-	fclose( fp );
-}
-
-int linesInFile( FILE * fp )
+int linesInFile( FILE * fp ) 
 {
 	int n = 0;
-	int c;
-	while ( ( c = fgetc( fp ) ) != EOF )
+	for ( int c = getc( fp ); c != EOF; c = getc( fp ) )
 	{
-		if ( c == '\n' ) n++;
+		if ( c == '\n' || c == '\r' ) n++;
 	}
+	rewind( fp ); // !!!
 	return n;
 }
 
