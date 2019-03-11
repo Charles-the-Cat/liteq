@@ -3,7 +3,7 @@
 
 #define DEBUG 0
 
-#define HUGE_FILE
+#define HUGE_FILE (1<<30) /* one GiB */
 
 /* an intermediate form for a single fastq file entry. */
 struct interm_entry
@@ -13,7 +13,6 @@ struct interm_entry
 	char * plusline;
 	char * scoresline;
 };
-
 
 void liteqDebugDisplay( struct liteq_file disp )
 {
@@ -33,15 +32,9 @@ void liteqDebugDisplay( struct liteq_file disp )
 	}
 }
 
-size_t mystrlen( char * s )
-{
-	int n = 0;
-	for ( ; s[n] != '\0'; n++ ) ;
-	return n;
-}
-
-/* FIXME: I think \n s are included in reads, strip them! */
+// TODO: leaks! free pointers regarding readline()!
 // TODO: sanity check for huge fastq files that would exceed memory capacity
+// TODO: more err(...)s for mallocs, etc. that could fail
 int main ( int argc, char * * argv )
 {
 	char * infilename = argv[1];
@@ -63,7 +56,7 @@ int main ( int argc, char * * argv )
 	struct interm_entry * interms = malloc( out.linecount * sizeof(struct interm_entry) );
 
 	/* guarantee getline's very first args are NULL and 0 so it allocates correctly */ 
-	size_t getline_len = 0;	// FIXME: we may need to make this a pointer to many zero values
+	size_t getline_len = 0;
 	for ( uint32_t i = 0; i < out.linecount; i++ ) // TODO: replace with memsetting in zeros?
 	{
 		interms[i].seqidline  = NULL; 
@@ -103,7 +96,7 @@ int main ( int argc, char * * argv )
 
 	for ( uint32_t i = 0; i < out.linecount; i++ )
 	{
-		out.lines[i].readcount = (uint32_t)mystrlen( interms[i].readsline ); 		
+		out.lines[i].readcount = (uint32_t)strlen( interms[i].readsline ); 		
 		
 		/* TODO: make a single call to malloc instead of iterating */
 		out.lines[i].reads = malloc( out.lines[i].readcount * sizeof(uint8_t) );
@@ -118,8 +111,6 @@ int main ( int argc, char * * argv )
 		}
 	}
 
-	free( interms ); // TODO: must iterate?
-	
 	/* file output stuff here */
 	FILE * outfp = fopen( outfilename, "wb" );
 	if ( outfp == NULL ) err ( -1, "File \"%s\" could not be opened for writing\n", outfilename );
@@ -144,7 +135,15 @@ int main ( int argc, char * * argv )
 
 	fclose( infp  );	
 	fclose( outfp );
-	
+
+	for ( uint32_t i = 0; i < out.linecount; i++ ) // TODO: perform interms freeing before file output stuff?
+	{
+		free( interms[i].seqidline  );
+		free( interms[i].readsline  ); 
+		free( interms[i].plusline   );
+		free( interms[i].scoresline );
+	} 
+	free( interms );
 	for ( uint32_t i = 0; i < out.linecount; i++ ) free( out.lines[i].reads );
 	free( out.lines );
 	return 0;
